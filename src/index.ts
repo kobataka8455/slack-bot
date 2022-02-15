@@ -15,7 +15,7 @@ require("dotenv").config();
 /**
  * twitter api setting
  */
-const TWITTER_BEARER: string = process.env.TWITTER_BEARER || "";
+const TWITTER_BEARER: string | null = process.env.TWITTER_BEARER || "";
 // Instanciate with desired auth type (here's Bearer v2 auth)
 // Tell typescript it's a readonly app
 const twitterClient = new TwitterApi(TWITTER_BEARER);
@@ -26,14 +26,6 @@ const client = twitterClient.readOnly;
  */
 const SLACK_API_URL: string = "https://slack.com/api/";
 const SLACK_BOT_TOKEN: string = process.env.SLACK_BOT_TOKEN || "";
-
-/**
- * interval set
- */
-const _now = new Date();
-const now = _now.toISOString();
-const _before5min = new Date(_now.getTime() - interval * 60 * 1000);
-const before5min = _before5min.toISOString();
 
 /**
  * twitter helper
@@ -50,6 +42,11 @@ const getTwitterUserID = (user: string) => {
  */
 const getTweet = (id: string) => {
   return new Promise((resolve) => {
+    const _now = new Date();
+    const now = _now.toISOString();
+    const _before5min = new Date(_now.getTime() - interval * 60 * 1000);
+    const before5min = _before5min.toISOString();
+
     const userTweets = client.v2.userTimeline(id, {
       exclude: "replies",
       max_results: 5,
@@ -106,6 +103,8 @@ ${tweet.text}
 };
 
 const send = async (): Promise<void> => {
+  // console.log(`send start: ${new Date()}`);
+
   const userTweetArray: {
     [name: string]: any;
   } = {};
@@ -131,10 +130,10 @@ const send = async (): Promise<void> => {
     }
   }
 };
-send();
+// send();
 /**
  * cron start
  */
-// cron.schedule(`0 */${interval} * * * *`, async () => await send(), {
-//   timezone: "Asia/Tokyo",
-// });
+cron.schedule(`0 */${interval} * * * *`, async () => await send(), {
+  timezone: "Asia/Tokyo",
+});
