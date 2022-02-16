@@ -102,8 +102,30 @@ ${tweet.text}
   });
 };
 
+/**
+ * slack notification
+ */
+const notificationPost = () => {
+  const notificationOptions: {
+    token: string;
+    channel?: string;
+    text?: string;
+  } = {
+    token: SLACK_BOT_TOKEN,
+    channel: "twitter-bot-notification",
+    text: `send start: ${new Date()}`,
+  };
+  request.post({ url: SLACK_API_URL + "chat.postMessage", formData: notificationOptions }, function (error: any, response: any, body: any) {
+    if (!error && response.statusCode == 200) {
+      console.log("ok");
+    } else {
+      console.log("status code: " + response.statusCode);
+    }
+  });
+};
+
 const send = async (): Promise<void> => {
-  // console.log(`send start: ${new Date()}`);
+  notificationPost();
 
   const userTweetArray: {
     [name: string]: any;
@@ -113,11 +135,11 @@ const send = async (): Promise<void> => {
     const id: any = await getTwitterUserID(user);
     const tweetObj: any = await getTweet(id.data.id);
     const tweets: any = tweetObj._realData.data;
-
     // 空だったらスキップ
     if (tweets === undefined) continue;
     userTweetArray[user] = tweets;
   }
+
   // 空だったら処理終了
   if (userTweetArray === {}) return;
 
@@ -130,10 +152,14 @@ const send = async (): Promise<void> => {
     }
   }
 };
-// send();
 /**
  * cron start
  */
 cron.schedule(`0 */${interval} * * * *`, async () => await send(), {
   timezone: "Asia/Tokyo",
 });
+
+/**
+ * once test
+ */
+// send();
