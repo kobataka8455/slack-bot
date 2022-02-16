@@ -40,13 +40,8 @@ const getTwitterUserID = (user: string) => {
 /**
  * twitter main
  */
-const getTweet = (id: string) => {
+const getTweet = (id: string, now: string, before5min: string) => {
   return new Promise((resolve) => {
-    const _now = new Date();
-    const now = _now.toISOString();
-    const _before5min = new Date(_now.getTime() - interval * 60 * 1000);
-    const before5min = _before5min.toISOString();
-
     const userTweets = client.v2.userTimeline(id, {
       exclude: "replies",
       max_results: 5,
@@ -127,13 +122,17 @@ const notificationPost = () => {
 const send = async (): Promise<void> => {
   notificationPost();
 
+  const _now = new Date(Math.ceil(new Date().getTime() / 1000 / 60 / 5) * 1000 * 60 * 5);
+  const now = _now.toISOString();
+  const _before5min = new Date(_now.getTime() - interval * 60 * 1000);
+  const before5min = _before5min.toISOString();
   const userTweetArray: {
     [name: string]: any;
   } = {};
 
   for (let user of Object.keys(TWITTER_USERS)) {
     const id: any = await getTwitterUserID(user);
-    const tweetObj: any = await getTweet(id.data.id);
+    const tweetObj: any = await getTweet(id.data.id, now, before5min);
     const tweets: any = tweetObj._realData.data;
     // 空だったらスキップ
     if (tweets === undefined) continue;
